@@ -17,6 +17,7 @@ import { AiSuggestions } from "@/components/ai-suggestions";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Trash, Wand2 } from "lucide-react";
+import { ResumeUpload } from "@/components/resume-upload";
 
 const defaultValues: ResumeData = {
   contact: {
@@ -105,7 +106,7 @@ export function ResumeForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-4">
           <Button
             type="button"
             onClick={generateFullResume}
@@ -115,6 +116,16 @@ export function ResumeForm() {
             Generate Full Resume with AI
           </Button>
         </div>
+
+        <ResumeUpload
+          onUploadComplete={(data) => {
+            form.reset(data);
+            toast({
+              title: "Success",
+              description: "Resume data imported successfully",
+            });
+          }}
+        />
 
         {/* Contact Section */}
         <Card>
@@ -131,11 +142,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.fullName"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -149,11 +155,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input type="email" {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.email"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -167,11 +168,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input type="tel" {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.phone"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -185,11 +181,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.location"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -203,11 +194,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.linkedIn"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -221,11 +207,6 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-                  <AiSuggestions
-                    section="contact.website"
-                    content={field.value}
-                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
-                  />
                   <FormMessage />
                 </FormItem>
               )}

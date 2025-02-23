@@ -5,6 +5,8 @@ import { Mistral } from "./lib/mistral";
 import { RAGService } from "./lib/rag";
 import { resumeSchema, embeddingSchema } from "@shared/schema";
 import {ResumeData} from "@shared/types"
+import multer from "multer";
+import { parseResume } from "./lib/resume-parser";
 
 if (!process.env.MISTRAL_API_KEY) {
   throw new Error("MISTRAL_API_KEY environment variable is required");
@@ -134,14 +136,14 @@ export async function registerRoutes(app: Express) {
       const currentData = req.body.currentData;
 
       // Generate a professional summary
-      const summaryPrompt = currentData?.summary 
+      const summaryPrompt = currentData?.summary
         ? `Improve this professional summary: ${currentData.summary}`
         : "Generate a professional summary for a resume";
 
       const summary = await mistral.getSuggestion("summary", summaryPrompt);
 
       // Generate experience descriptions if needed
-      const experience = currentData?.experience?.length 
+      const experience = currentData?.experience?.length
         ? await Promise.all(currentData.experience.map(async (exp) => {
             if (!exp.description) {
               const description = await mistral.getSuggestion(
@@ -198,6 +200,23 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Failed to generate resume:", error);
       res.status(500).json({ message: "Failed to generate resume" });
+    }
+  });
+
+  const upload = multer({ storage: multer.memoryStorage() });
+
+  app.post("/api/resume/upload", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        res.status(400).json({ message: "No file uploaded" });
+        return;
+      }
+
+      const parsedData = await parseResume(req.file.buffer, req.file.originalname);
+      res.json(parsedData);
+    } catch (error) {
+      console.error("Failed to parse resume:", error);
+      res.status(500).json({ message: "Failed to parse resume" });
     }
   });
 

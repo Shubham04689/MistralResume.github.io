@@ -62,7 +62,7 @@ export function ResumePreview({ data }: ResumePreviewProps) {
                   ))}
                 </ul>
               )}
-              {exp.technologies?.length > 0 && (
+              {exp.technologies && exp.technologies.length > 0 && (
                 <p className="text-sm text-muted-foreground">
                   Technologies: {exp.technologies.join(", ")}
                 </p>
@@ -78,7 +78,7 @@ export function ResumePreview({ data }: ResumePreviewProps) {
                 {edu.institution} • {edu.startDate} - {edu.endDate || "Present"}
               </p>
               {edu.gpa && <p>GPA: {edu.gpa}</p>}
-              {edu.achievements?.length > 0 && (
+              {edu.achievements && edu.achievements.length > 0 && (
                 <ul>
                   {edu.achievements.map((achievement, j) => (
                     <li key={j}>{achievement}</li>
@@ -101,7 +101,7 @@ export function ResumePreview({ data }: ResumePreviewProps) {
             </div>
           ))}
 
-          {data.projects?.length > 0 && (
+          {data.projects && data.projects.length > 0 && (
             <>
               <h2>Projects</h2>
               {data.projects.map((project, i) => (
@@ -123,7 +123,7 @@ export function ResumePreview({ data }: ResumePreviewProps) {
             </>
           )}
 
-          {data.languages?.length > 0 && (
+          {data.languages && data.languages.length > 0 && (
             <>
               <h2>Languages</h2>
               <ul>

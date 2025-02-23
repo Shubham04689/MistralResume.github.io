@@ -12,8 +12,12 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ResumePreview />
-          <ResumeForm />
+          <div className="order-2 lg:order-1">
+            <ResumePreview />
+          </div>
+          <div className="order-1 lg:order-2">
+            <ResumeForm />
+          </div>
         </div>
       </main>
     </div>

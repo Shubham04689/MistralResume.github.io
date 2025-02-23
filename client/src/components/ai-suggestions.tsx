@@ -8,9 +8,10 @@ import { apiRequest } from "@/lib/queryClient";
 interface AiSuggestionsProps {
   section: string;
   content: string;
+  onUseSuggestion: (suggestion: string) => void;
 }
 
-export function AiSuggestions({ section, content }: AiSuggestionsProps) {
+export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestionsProps) {
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState("");
   const { toast } = useToast();
@@ -52,7 +53,15 @@ export function AiSuggestions({ section, content }: AiSuggestionsProps) {
         ) : suggestion ? (
           <div className="space-y-2">
             <p className="text-sm">{suggestion}</p>
-            <Button size="sm" variant="secondary" className="w-full">
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              className="w-full"
+              onClick={() => {
+                onUseSuggestion(suggestion);
+                setSuggestion("");
+              }}
+            >
               Use Suggestion
             </Button>
           </div>

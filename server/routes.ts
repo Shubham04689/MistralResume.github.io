@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { Mistral } from "./lib/mistral";
 import { RAGService } from "./lib/rag";
 import { resumeSchema, embeddingSchema } from "@shared/schema";
+import {ResumeData} from "@shared/types"
 
 if (!process.env.MISTRAL_API_KEY) {
   throw new Error("MISTRAL_API_KEY environment variable is required");
@@ -124,6 +125,79 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Failed to get AI suggestion:", error);
       res.status(500).json({ message: "Failed to get AI suggestion" });
+    }
+  });
+
+  // Generate complete resume with AI
+  app.post("/api/generate-resume", async (req, res) => {
+    try {
+      const currentData = req.body.currentData;
+
+      // Generate a professional summary
+      const summaryPrompt = currentData?.summary 
+        ? `Improve this professional summary: ${currentData.summary}`
+        : "Generate a professional summary for a resume";
+
+      const summary = await mistral.getSuggestion("summary", summaryPrompt);
+
+      // Generate experience descriptions if needed
+      const experience = currentData?.experience?.length 
+        ? await Promise.all(currentData.experience.map(async (exp) => {
+            if (!exp.description) {
+              const description = await mistral.getSuggestion(
+                "experience",
+                `Generate a professional description for ${exp.position} at ${exp.company}`
+              );
+              return { ...exp, description };
+            }
+            return exp;
+          }))
+        : [{
+            company: "Previous Company",
+            position: "Previous Position",
+            startDate: "2020-01",
+            description: await mistral.getSuggestion(
+              "experience",
+              "Generate a sample work experience description"
+            ),
+            achievements: [],
+            technologies: [],
+          }];
+
+      // Generate a complete resume structure
+      const generatedResume: ResumeData = {
+        contact: currentData?.contact || {
+          fullName: "",
+          email: "",
+          phone: "",
+          location: "",
+          linkedIn: "",
+          website: "",
+        },
+        summary,
+        experience,
+        education: currentData?.education || [{
+          institution: "",
+          degree: "",
+          field: "",
+          startDate: "",
+          endDate: "",
+          gpa: "",
+          achievements: [],
+        }],
+        skills: currentData?.skills || [{
+          category: "Technical Skills",
+          items: [],
+          proficiency: "intermediate",
+        }],
+        projects: currentData?.projects || [],
+        languages: currentData?.languages || [],
+      };
+
+      res.json(generatedResume);
+    } catch (error) {
+      console.error("Failed to generate resume:", error);
+      res.status(500).json({ message: "Failed to generate resume" });
     }
   });
 

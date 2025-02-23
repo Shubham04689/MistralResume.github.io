@@ -9,11 +9,11 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-primary">AI Resume Builder</h1>
         </div>
       </header>
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <ResumeForm />
           <ResumePreview />
+          <ResumeForm />
         </div>
       </main>
     </div>

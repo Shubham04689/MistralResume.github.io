@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AiSuggestions } from "@/components/ai-suggestions";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, Wand2 } from "lucide-react";
 
 const defaultValues: ResumeData = {
   contact: {
@@ -77,9 +77,40 @@ export function ResumeForm() {
     }
   }
 
+  async function generateFullResume() {
+    try {
+      const res = await apiRequest("POST", "/api/generate-resume", {
+        currentData: form.getValues(),
+      });
+      const data = await res.json();
+      form.reset(data);
+      toast({
+        title: "Success",
+        description: "Resume generated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate resume",
+        variant: "destructive",
+      });
+    }
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            onClick={generateFullResume}
+            className="mb-4"
+          >
+            <Wand2 className="h-4 w-4 mr-2" />
+            Generate Full Resume with AI
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Contact Information</CardTitle>
@@ -94,6 +125,11 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <AiSuggestions
+                    section="contact.fullName"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -107,6 +143,11 @@ export function ResumeForm() {
                   <FormControl>
                     <Input type="email" {...field} />
                   </FormControl>
+                  <AiSuggestions
+                    section="contact.email"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -120,6 +161,11 @@ export function ResumeForm() {
                   <FormControl>
                     <Input type="tel" {...field} />
                   </FormControl>
+                  <AiSuggestions
+                    section="contact.phone"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -133,6 +179,11 @@ export function ResumeForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <AiSuggestions
+                    section="contact.location"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -153,7 +204,11 @@ export function ResumeForm() {
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
-                  <AiSuggestions section="summary" content={field.value} />
+                  <AiSuggestions
+                    section="summary"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -190,7 +245,23 @@ export function ResumeForm() {
           </CardHeader>
           <CardContent className="space-y-6">
             {form.watch("experience").map((_, index) => (
-              <div key={index} className="space-y-4">
+              <div key={index} className="space-y-4 relative">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0"
+                  onClick={() => {
+                    const experiences = form.getValues("experience");
+                    form.setValue(
+                      "experience",
+                      experiences.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+
                 <FormField
                   control={form.control}
                   name={`experience.${index}.company`}
@@ -200,10 +271,35 @@ export function ResumeForm() {
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
+                      <AiSuggestions
+                        section={`experience.${index}.company`}
+                        content={field.value}
+                        onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name={`experience.${index}.position`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <AiSuggestions
+                        section={`experience.${index}.position`}
+                        content={field.value}
+                        onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name={`experience.${index}.description`}
@@ -214,8 +310,9 @@ export function ResumeForm() {
                         <Textarea {...field} />
                       </FormControl>
                       <AiSuggestions
-                        section="experience"
+                        section={`experience.${index}.description`}
                         content={field.value}
+                        onUseSuggestion={(suggestion) => field.onChange(suggestion)}
                       />
                       <FormMessage />
                     </FormItem>

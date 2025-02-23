@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import type { ResumeData } from "@shared/schema";
 
-export function ResumePreview() {
-  const { data: resume } = useQuery<ResumeData>({
-    queryKey: ["/api/resumes/current"],
-  });
+interface ResumePreviewProps {
+  data?: ResumeData;
+}
 
-  if (!resume) {
+export function ResumePreview({ data }: ResumePreviewProps) {
+  if (!data) {
     return (
       <Card className="p-6">
         <div className="animate-pulse space-y-4">
@@ -33,22 +33,22 @@ export function ResumePreview() {
         </div>
 
         <div className="prose max-w-none">
-          <h1>{resume.contact.fullName}</h1>
+          <h1>{data.contact.fullName}</h1>
           <p className="text-muted-foreground">
-            {resume.contact.email} • {resume.contact.phone} • {resume.contact.location}
+            {data.contact.email} • {data.contact.phone} • {data.contact.location}
           </p>
-          {resume.contact.linkedIn && (
-            <p className="text-muted-foreground">LinkedIn: {resume.contact.linkedIn}</p>
+          {data.contact.linkedIn && (
+            <p className="text-muted-foreground">LinkedIn: {data.contact.linkedIn}</p>
           )}
-          {resume.contact.website && (
-            <p className="text-muted-foreground">Website: {resume.contact.website}</p>
+          {data.contact.website && (
+            <p className="text-muted-foreground">Website: {data.contact.website}</p>
           )}
 
           <h2>Professional Summary</h2>
-          <p>{resume.summary}</p>
+          <p>{data.summary}</p>
 
           <h2>Experience</h2>
-          {resume.experience.map((exp, i) => (
+          {data.experience.map((exp, i) => (
             <div key={i} className="mb-4">
               <h3>{exp.position}</h3>
               <p className="text-muted-foreground">
@@ -71,7 +71,7 @@ export function ResumePreview() {
           ))}
 
           <h2>Education</h2>
-          {resume.education.map((edu, i) => (
+          {data.education.map((edu, i) => (
             <div key={i} className="mb-4">
               <h3>{edu.degree} in {edu.field}</h3>
               <p className="text-muted-foreground">
@@ -89,7 +89,7 @@ export function ResumePreview() {
           ))}
 
           <h2>Skills</h2>
-          {resume.skills.map((skill, i) => (
+          {data.skills.map((skill, i) => (
             <div key={i} className="mb-4">
               <h3>{skill.category}</h3>
               <p>{skill.items.join(", ")}</p>
@@ -101,10 +101,10 @@ export function ResumePreview() {
             </div>
           ))}
 
-          {resume.projects?.length > 0 && (
+          {data.projects?.length > 0 && (
             <>
               <h2>Projects</h2>
-              {resume.projects.map((project, i) => (
+              {data.projects.map((project, i) => (
                 <div key={i} className="mb-4">
                   <h3>{project.name}</h3>
                   <p>{project.description}</p>
@@ -123,11 +123,11 @@ export function ResumePreview() {
             </>
           )}
 
-          {resume.languages?.length > 0 && (
+          {data.languages?.length > 0 && (
             <>
               <h2>Languages</h2>
               <ul>
-                {resume.languages.map((lang, i) => (
+                {data.languages.map((lang, i) => (
                   <li key={i}>
                     {lang.name} - {lang.proficiency}
                   </li>

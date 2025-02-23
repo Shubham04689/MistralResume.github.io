@@ -4,18 +4,23 @@ import { storage } from "./storage";
 import { Mistral } from "./lib/mistral";
 import { RAGService } from "./lib/rag";
 import { resumeSchema, embeddingSchema } from "@shared/schema";
-import {ResumeData} from "@shared/types"
+import {ResumeData} from "@shared/schema"
 import multer from "multer";
 import { parseResume } from "./lib/resume-parser";
 
-if (!process.env.MISTRAL_API_KEY) {
-  throw new Error("MISTRAL_API_KEY environment variable is required");
-}
+console.log('MISTRAL_API_KEY:', process.env.MISTRAL_API_KEY);
 
-const mistral = new Mistral(process.env.MISTRAL_API_KEY);
-const rag = new RAGService(process.env.MISTRAL_API_KEY);
-
+// Initialize inside the exported function
 export async function registerRoutes(app: Express) {
+  // Check env var inside the function after dotenv.config() has run
+  if (!process.env.MISTRAL_API_KEY) {
+    throw new Error("MISTRAL_API_KEY environment variable is required");
+  }
+
+  // Initialize clients after validation
+  const mistral = new Mistral(process.env.MISTRAL_API_KEY);
+  const rag = new RAGService(process.env.MISTRAL_API_KEY);
+
   // Resume CRUD operations
   app.get("/api/resumes/:id", async (req, res) => {
     const resume = await storage.getResume(Number(req.params.id));
@@ -144,7 +149,7 @@ export async function registerRoutes(app: Express) {
 
       // Generate experience descriptions if needed
       const experience = currentData?.experience?.length
-        ? await Promise.all(currentData.experience.map(async (exp) => {
+        ? await Promise.all(currentData.experience.map(async (exp: { description?: string; position: string; company: string }) => {
             if (!exp.description) {
               const description = await mistral.getSuggestion(
                 "experience",
@@ -223,3 +228,4 @@ export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
   return httpServer;
 }
+

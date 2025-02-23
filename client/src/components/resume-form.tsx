@@ -116,7 +116,7 @@ export function ResumeForm() {
   }
 
   const addFormSection = (section: keyof ResumeData, template: any) => {
-    const currentItems = form.getValues(section) || [];
+    const currentItems = Array.isArray(form.getValues(section)) ? form.getValues(section) : [];
     form.setValue(section, [...currentItems, template]);
     updateFormData(section, [...currentItems, template]);
   };

@@ -6,6 +6,12 @@ export class Mistral {
     this.apiKey = apiKey;
   }
 
+  private getContextPrompt(content: string): string {
+    return content.length > 500 
+      ? content.substring(0, 500) + "..."
+      : content;
+  }
+
   async getSuggestion(section: string, content: string): Promise<string> {
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
@@ -18,13 +24,15 @@ export class Mistral {
         messages: [
           {
             role: "system",
-            content: "You are a professional resume writer helping to improve resume content.",
+            content: "You are a professional resume writer. Provide concise suggestions in 2-3 paragraphs and include 2-3 specific examples for improvement. Focus on clarity, impact, and professional tone.",
           },
           {
             role: "user",
-            content: `Suggest improvements for this ${section} section: ${content}`,
+            content: `Please improve this ${section} section. Provide a rewrite in 2-3 paragraphs and 2-3 specific examples:\n\n${this.getContextPrompt(content)}`,
           },
         ],
+        temperature: 0.7,
+        max_tokens: 500,
       }),
     });
 

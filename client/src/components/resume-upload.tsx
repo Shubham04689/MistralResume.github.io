@@ -16,6 +16,7 @@ export function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log("Selected file:", file);
     if (!file) return;
 
     setLoading(true);
@@ -23,8 +24,7 @@ export function ResumeUpload({ onUploadComplete }: ResumeUploadProps) {
     formData.append("file", file);
 
     try {
-      const res = await apiRequest("POST", "/api/resume/upload", formData);
-      const data = await res.json();
+      const data = await apiRequest<ResumeData>("POST", "/api/resume/upload", formData);
       onUploadComplete(data);
       toast({
         title: "Success",

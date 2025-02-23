@@ -11,17 +11,24 @@ interface AiSuggestionsProps {
   onUseSuggestion: (suggestion: string) => void;
 }
 
+type SuggestionResponse = {
+  experience?: { description: string; achievements: string[]; keywords: string[] };
+  education?: { description: string; highlights: string[] };
+  skills?: { skills: string[]; categories: string[] };
+  summary?: { summary: string; keywords: string[] };
+  suggestion?: string;
+};
+
 export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestionsProps) {
   const [loading, setLoading] = useState(false);
-  const [suggestion, setSuggestion] = useState("");
+  const [suggestion, setSuggestion] = useState<SuggestionResponse>({});
   const { toast } = useToast();
 
   async function getSuggestion() {
     setLoading(true);
     try {
-      const res = await apiRequest("POST", "/api/suggest", { section, content });
-      const data = await res.json();
-      setSuggestion(data.suggestion);
+      const response = await apiRequest<SuggestionResponse>("POST", "/api/suggest", { section, content });
+      setSuggestion(response);
     } catch (error) {
       toast({
         title: "Error",
@@ -32,6 +39,19 @@ export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestio
       setLoading(false);
     }
   }
+
+  const getSuggestionContent = () => {
+    if (suggestion.experience) {
+      return suggestion.experience.description;
+    } else if (suggestion.education) {
+      return suggestion.education.description;
+    } else if (suggestion.skills) {
+      return suggestion.skills.skills.join(", ");
+    } else if (suggestion.summary) {
+      return suggestion.summary.summary;
+    }
+    return suggestion.suggestion || "";
+  };
 
   return (
     <Popover>
@@ -50,16 +70,16 @@ export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestio
       <PopoverContent className="w-80">
         {loading ? (
           <p className="text-sm text-muted-foreground">Generating suggestion...</p>
-        ) : suggestion ? (
+        ) : getSuggestionContent() ? (
           <div className="space-y-2">
-            <p className="text-sm">{suggestion}</p>
+            <p className="text-sm">{getSuggestionContent()}</p>
             <Button 
               size="sm" 
               variant="secondary" 
               className="w-full"
               onClick={() => {
-                onUseSuggestion(suggestion);
-                setSuggestion("");
+                onUseSuggestion(getSuggestionContent());
+                setSuggestion({});
               }}
             >
               Use Suggestion

@@ -98,3 +98,11 @@ export type InsertResume = z.infer<typeof insertResumeSchema>;
 export type ResumeData = z.infer<typeof resumeSchema>;
 export type Embedding = typeof embeddings.$inferSelect;
 export type InsertEmbedding = z.infer<typeof insertEmbeddingSchema>;
+
+export const suggestionSchema = z.object({
+  achievements: z.array(z.string().max(120)).optional(),
+  technologies: z.array(z.string().max(25)).optional(),
+  metrics: z.array(z.string().max(80)).optional(),
+  skills: z.array(z.string().max(25)).optional(),
+  summary: z.string().max(300).optional()
+});

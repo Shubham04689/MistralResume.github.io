@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Wand2 } from "lucide-react";
@@ -40,17 +40,18 @@ export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestio
     }
   }
 
+  const formatSuggestionContent = (rawContent: string) => {
+    return rawContent
+      .replace(/\n{2,}/g, '<br/><br/>') // Preserve paragraph breaks
+      .replace(/\n/g, '<br/>')          // Convert single newlines to breaks
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic text
+  };
+
   const getSuggestionContent = () => {
-    if (suggestion.experience) {
-      return suggestion.experience.description;
-    } else if (suggestion.education) {
-      return suggestion.education.description;
-    } else if (suggestion.skills) {
-      return suggestion.skills.skills.join(", ");
-    } else if (suggestion.summary) {
-      return suggestion.summary.summary;
-    }
-    return suggestion.suggestion || "";
+    const rawContent = suggestion.suggestion || "";
+    const formattedContent = formatSuggestionContent(rawContent);
+    return <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formattedContent }} />;
   };
 
   return (
@@ -72,13 +73,13 @@ export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestio
           <p className="text-sm text-muted-foreground">Generating suggestion...</p>
         ) : getSuggestionContent() ? (
           <div className="space-y-2">
-            <p className="text-sm">{getSuggestionContent()}</p>
+            {getSuggestionContent()}
             <Button 
               size="sm" 
               variant="secondary" 
               className="w-full"
               onClick={() => {
-                onUseSuggestion(getSuggestionContent());
+                onUseSuggestion(suggestion.suggestion || "");
                 setSuggestion({});
               }}
             >
@@ -94,3 +95,11 @@ export function AiSuggestions({ section, content, onUseSuggestion }: AiSuggestio
     </Popover>
   );
 }
+
+<style>{`
+  .whitespace-pre-wrap {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.6;
+  }
+`}</style>

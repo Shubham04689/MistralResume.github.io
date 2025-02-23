@@ -1,5 +1,7 @@
 import React from 'react';
 import { z } from 'zod';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion } from "framer-motion";
 
 interface SuggestionPreviewProps {
   section: string;
@@ -7,125 +9,135 @@ interface SuggestionPreviewProps {
 }
 
 const SuggestionPreview: React.FC<SuggestionPreviewProps> = ({ section, suggestion }) => {
-  const renderExperience = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">Experience Suggestion</h3>
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Description</h4>
-          <p className="text-gray-700 whitespace-pre-wrap">{suggestion.description}</p>
-        </div>
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Key Achievements</h4>
-          <ul className="list-disc list-inside space-y-1">
-            {suggestion.achievements.map((achievement: string, index: number) => (
-              <li key={index} className="text-gray-700">{achievement}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Keywords</h4>
-          <div className="flex flex-wrap gap-2">
-            {suggestion.keywords.map((keyword: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-blue-50 text-blue-600 text-sm rounded-md">
-                {keyword}
-              </span>
-            ))}
-          </div>
-        </div>
+  const renderSection = (title: string, content: React.ReactNode) => (
+    <div className="space-y-4 mb-6">
+      <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">{title}</h3>
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-4">
+        {content}
       </div>
     </div>
   );
 
-  const renderEducation = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">Education Suggestion</h3>
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Description</h4>
-          <p className="text-gray-700 whitespace-pre-wrap">{suggestion.description}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Highlights</h4>
-          <ul className="list-disc list-inside space-y-1">
-            {suggestion.highlights.map((highlight: string, index: number) => (
-              <li key={index} className="text-gray-700">{highlight}</li>
-            ))}
-          </ul>
-        </div>
+  const renderList = (items: string[]) => (
+    <ul className="space-y-3">
+      {items.slice(0, 3).map((item, index) => (
+        <motion.li
+          key={index}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start"
+        >
+          <span className="text-blue-500 mr-2">•</span>
+          <span className="text-gray-700 flex-1">
+            {item.length > 150 ? `${item.substring(0, 150)}...` : item}
+          </span>
+        </motion.li>
+      ))}
+    </ul>
+  );
+
+  const renderTags = (items: string[]) => (
+    <div className="flex flex-wrap gap-2">
+      {items.slice(0, 8).map((item, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+        >
+          {item.length > 20 ? `${item.substring(0, 20)}...` : item}
+        </motion.span>
+      ))}
+    </div>
+  );
+
+  const renderExperience = () => renderSection(
+    'Experience Suggestions',
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-3">Career Highlights</h4>
+        {renderList(suggestion.achievements?.slice(0, 3) || [])}
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-3">Technical Skills</h4>
+        {renderTags(suggestion.technologies || [])}
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-3">Key Metrics</h4>
+        <ul className="space-y-2">
+          {suggestion.metrics?.slice(0, 2).map((metric, index) => (
+            <li key={index} className="text-gray-700">
+              → {metric}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 
-  const renderSkills = () => (
+  const renderEducation = () => renderSection(
+    'Education Suggestion',
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">Skills Suggestion</h3>
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Suggested Skills</h4>
-          <div className="flex flex-wrap gap-2">
-            {suggestion.skills.map((skill: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-green-50 text-green-600 text-sm rounded-md">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Categories</h4>
-          <div className="flex flex-wrap gap-2">
-            {suggestion.categories.map((category: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-purple-50 text-purple-600 text-sm rounded-md">
-                {category}
-              </span>
-            ))}
-          </div>
-        </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Description</h4>
+        <p className="text-gray-700">{suggestion.description}</p>
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Highlights</h4>
+        {renderList(suggestion.highlights)}
       </div>
     </div>
   );
 
-  const renderSummary = () => (
+  const renderSkills = () => renderSection(
+    'Skills Suggestion',
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800">Summary Suggestion</h3>
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Professional Summary</h4>
-          <p className="text-gray-700 whitespace-pre-wrap">{suggestion.summary}</p>
-        </div>
-        <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2">Keywords</h4>
-          <div className="flex flex-wrap gap-2">
-            {suggestion.keywords.map((keyword: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-blue-50 text-blue-600 text-sm rounded-md">
-                {keyword}
-              </span>
-            ))}
-          </div>
-        </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Suggested Skills</h4>
+        {renderTags(suggestion.skills)}
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Categories</h4>
+        {renderTags(suggestion.categories)}
+      </div>
+    </div>
+  );
+
+  const renderSummary = () => renderSection(
+    'Summary Suggestion',
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Professional Summary</h4>
+        <p className="text-gray-700">{suggestion.summary}</p>
+      </div>
+      <div>
+        <h4 className="text-sm font-medium text-gray-600 mb-2">Keywords</h4>
+        {renderTags(suggestion.keywords)}
       </div>
     </div>
   );
 
   const renderContent = () => {
     switch (section) {
-      case 'experience':
-        return renderExperience();
-      case 'education':
-        return renderEducation();
-      case 'skills':
-        return renderSkills();
-      case 'summary':
-        return renderSummary();
-      default:
-        return null;
+      case 'experience': return renderExperience();
+      case 'education': return renderEducation();
+      case 'skills': return renderSkills();
+      case 'summary': return renderSummary();
+      default: return null;
     }
   };
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
-      {renderContent()}
-    </div>
+    <ScrollArea className="h-[500px] w-full rounded-md border">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="p-6 bg-gray-50 rounded-lg"
+      >
+        {renderContent()}
+      </motion.div>
+    </ScrollArea>
   );
 };
 

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
-import { Mistral } from "./lib/mistral";
+import { Mistral } from './lib/mistral';
 import { RAGService } from "./lib/rag";
 import { resumeSchema, embeddingSchema } from "@shared/schema";
 import {ResumeData} from "@shared/schema"

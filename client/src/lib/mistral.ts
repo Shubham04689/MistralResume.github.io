@@ -1,4 +1,11 @@
 import { z } from "zod";
+import dotenv from 'dotenv';
+dotenv.config();
+
+const apiKey = process.env.MISTRAL_API_KEY;
+if (!apiKey) {
+  throw new Error("MISTRAL_API_KEY is not set");
+}
 
 // Define schemas for different resume sections
 const ExperienceSuggestion = z.object({
@@ -33,13 +40,13 @@ export class Mistral {
   private getSystemPrompt(section: string): string {
     switch (section) {
       case "experience":
-        return "You are a professional resume writer. Analyze the work experience and provide an improved description, key achievements, and relevant keywords.";
+        return "You are a professional resume writer. Analyze the work experience and provide a short and  consice  improved description, key achievements, and relevant keywords.";
       case "education":
-        return "You are a professional resume writer. Review the education details and suggest an improved description and key highlights.";
+        return "You are a professional resume writer. Review the education details and suggest a short and  consice improved description and key highlights.";
       case "skills":
-        return "You are a professional resume writer. Analyze the skills and suggest relevant skills and categories for organization.";
+        return "You are a professional resume writer. Analyze the skills and suggest comma seperated  relevant skills and categories for organization.";
       case "summary":
-        return "You are a professional resume writer. Create a compelling professional summary and extract key professional keywords.";
+        return "You are a professional resume writer. Create a compelling professional in short and  consice summary and extract key professional keywords.";
       default:
         return "You are a professional resume writer helping to improve resume content.";
     }
@@ -84,14 +91,16 @@ export class Mistral {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => null);
-      throw new Error(
-        `Failed to get AI suggestion: ${error?.error?.message || response.statusText}`
-      );
+      const errorText = await response.text(); // Get the error response as text
+      console.error("Error response from Mistral API:", errorText);
+      throw new Error(`Failed to get AI suggestion: ${errorText}`);
     }
 
     try {
       const data = await response.json();
+      if (typeof data !== 'object' || !data) {
+        throw new Error("Invalid response format from Mistral API");
+      }
       const rawContent = data.choices[0].message.content;
       const parsedContent = JSON.parse(rawContent);
       const schema = this.getResponseSchema(section);

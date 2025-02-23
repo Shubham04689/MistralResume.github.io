@@ -1,4 +1,14 @@
-import { ResumeData } from "@shared/schema";
+import { ResumeData, resumeSchema } from "@shared/schema";
+
+const defaultResumeStructure: ResumeData = {
+  contact: { fullName: "", email: "", phone: "", location: "", linkedIn: "", website: "" },
+  summary: "",
+  education: [],
+  experience: [],
+  skills: [],
+  projects: [],
+  languages: []
+};
 
 export async function parseResume(
   buffer: Buffer,
@@ -7,32 +17,43 @@ export async function parseResume(
   const fileType = filename.split(".").pop()?.toLowerCase();
 
   let text = "";
-  if (fileType === "pdf") {
-    const pdfParse = (await import("pdf-parse")).default;
-    const data = await pdfParse(buffer);
-    text = data.text;
-  } else if (fileType === "doc" || fileType === "docx") {
-    const mammoth = await import("mammoth");
-    const result = await mammoth.extractRawText({ buffer });
-    text = result.value;
-  } else if (fileType === "json") {
-    try {
-      const data = JSON.parse(buffer.toString());
-      // Validate against our schema
-      if (
-        typeof data === "object" &&
-        data !== null &&
-        "contact" in data &&
-        "summary" in data
-      ) {
-        return data as ResumeData;
+  try {
+    if (fileType === "pdf") {
+      const pdfjs = await import("pdfjs-dist");
+      const doc = await pdfjs.getDocument({ data: buffer }).promise;
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map((item: any) => item.str).join(" ") + "\n";
       }
-      throw new Error("Invalid resume JSON structure");
-    } catch (error) {
-      throw new Error("Invalid JSON file");
+    } else if (fileType === "doc" || fileType === "docx") {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer });
+      text = result.value;
+    } else if (fileType === "json") {
+      try {
+        const jsonData = JSON.parse(buffer.toString());
+        
+        // Return parsed data without validation
+        return {
+          ...defaultResumeStructure,
+          ...jsonData,
+          contact: {
+            ...defaultResumeStructure.contact,
+            ...jsonData.contact
+          }
+        };
+      } catch (error) {
+        if (error instanceof SyntaxError) {
+          throw new Error("Invalid JSON syntax");
+        }
+        throw error instanceof Error ? error : new Error("Invalid JSON structure");
+      }
+    } else {
+      throw new Error("Unsupported file type");
     }
-  } else {
-    throw new Error("Unsupported file type");
+  } catch (error) {
+    throw new Error(`File processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
   // Basic parsing logic - this can be enhanced with NLP

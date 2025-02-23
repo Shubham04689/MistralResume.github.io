@@ -20,6 +20,13 @@ import { ResumeUpload } from "@/components/resume-upload";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Trash, Wand2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const defaultValues: ResumeData = {
   contact: {
@@ -96,10 +103,10 @@ export function ResumeForm() {
 
   async function generateFullResume() {
     try {
-      const res = await apiRequest("POST", "/api/generate-resume", {
+      const res = await apiRequest<Response>("POST", "/api/generate-resume", {
         currentData: form.getValues(),
       });
-      const data = await res.json();
+      const data: ResumeData = await res.json();
       form.reset(data);
       setFormData(data);
       toast({
@@ -115,10 +122,14 @@ export function ResumeForm() {
     }
   }
 
-  const addFormSection = (section: keyof ResumeData, template: any) => {
-    const currentItems = Array.isArray(form.getValues(section)) ? form.getValues(section) : [];
-    form.setValue(section, [...currentItems, template]);
-    updateFormData(section, [...currentItems, template]);
+  const addFormSection = <T extends keyof ResumeData>(
+    section: T,
+    template: NonNullable<ResumeData[T]> extends (infer U)[] ? U : never
+  ) => {
+    const currentItems = (form.getValues(section) || []) as (typeof template)[];
+    const updatedItems = [...currentItems, template];
+    form.setValue(section, updatedItems as any);
+    updateFormData(section, updatedItems);
   };
 
   return (
@@ -277,7 +288,7 @@ export function ResumeForm() {
                       </FormControl>
                       <AiSuggestions
                         section="summary"
-                        content={field.value}
+                        content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                         onUseSuggestion={(suggestion) => {
                           field.onChange(suggestion);
                           updateFormData("summary", suggestion);
@@ -345,7 +356,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`experience.${index}.company`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const experiences = form.getValues("experience");
@@ -375,7 +386,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`experience.${index}.position`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const experiences = form.getValues("experience");
@@ -439,7 +450,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`experience.${index}.description`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const experiences = form.getValues("experience");
@@ -461,17 +472,17 @@ export function ResumeForm() {
                             <Textarea {...field} onChange={(e) => {
                               field.onChange(e);
                               const experiences = form.getValues("experience");
-                              experiences[index].achievements = e.target.value;
+                              experiences[index].achievements = e.target.value.split('\n').filter(line => line.trim());
                               updateFormData("experience", experiences);
                             }} />
                           </FormControl>
                           <AiSuggestions
                             section={`experience.${index}.achievements`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
-                              field.onChange(suggestion);
+                              field.onChange([...(field.value || []), suggestion]);
                               const experiences = form.getValues("experience");
-                              experiences[index].achievements = suggestion;
+                              experiences[index].achievements = [...(experiences[index].achievements || []), suggestion];
                               updateFormData("experience", experiences);
                             }}
                           />
@@ -489,17 +500,17 @@ export function ResumeForm() {
                             <Textarea {...field} onChange={(e) => {
                               field.onChange(e);
                               const experiences = form.getValues("experience");
-                              experiences[index].technologies = e.target.value;
+                              experiences[index].technologies = e.target.value.split('\n').map(line => line.trim()).filter(line => line);
                               updateFormData("experience", experiences);
                             }} />
                           </FormControl>
                           <AiSuggestions
                             section={`experience.${index}.technologies`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const experiences = form.getValues("experience");
-                              experiences[index].technologies = suggestion;
+                              experiences[index].technologies = suggestion.split('\n').map(line => line.trim()).filter(line => line);
                               updateFormData("experience", experiences);
                             }}
                           />
@@ -527,14 +538,14 @@ export function ResumeForm() {
                     link: "",
                     startDate: "",
                     endDate: "",
-                  })}
+                  } as ResumeData["projects"][number])}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Project
                 </Button>
               </CardHeader>
               <CardContent className="space-y-6">
-                {form.watch("projects")?.map((_, index) => (
+                {form.watch("projects")?.map((project, index) => (
                   <div key={index} className="space-y-4 relative p-4 border rounded-lg">
                     <Button
                       type="button"
@@ -567,7 +578,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`projects.${index}.name`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const projects = form.getValues("projects") || [];
@@ -596,7 +607,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`projects.${index}.description`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const projects = form.getValues("projects") || [];
@@ -663,7 +674,7 @@ export function ResumeForm() {
                       )}
                     />
                   </div>
-                ))}
+                )) ?? []}
               </CardContent>
             </Card>
 
@@ -723,7 +734,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`education.${index}.institution`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const educations = form.getValues("education");
@@ -751,7 +762,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`education.${index}.degree`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const educations = form.getValues("education");
@@ -779,7 +790,7 @@ export function ResumeForm() {
                           </FormControl>
                           <AiSuggestions
                             section={`education.${index}.field`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
                               field.onChange(suggestion);
                               const educations = form.getValues("education");
@@ -855,17 +866,17 @@ export function ResumeForm() {
                             <Textarea {...field} onChange={(e) => {
                               field.onChange(e);
                               const educations = form.getValues("education");
-                              educations[index].achievements = e.target.value;
+                              educations[index].achievements = e.target.value.split('\n').filter(line => line.trim());
                               updateFormData("education", educations);
                             }} />
                           </FormControl>
                           <AiSuggestions
                             section={`education.${index}.achievements`}
-                            content={field.value}
+                            content={Array.isArray(field.value) ? field.value.join('\n') : field.value ?? ''}
                             onUseSuggestion={(suggestion) => {
-                              field.onChange(suggestion);
+                              field.onChange([...(field.value || []), suggestion]);
                               const educations = form.getValues("education");
-                              educations[index].achievements = suggestion;
+                              educations[index].achievements = [...(educations[index].achievements || []), suggestion];
                               updateFormData("education", educations);
                             }}
                           />
@@ -942,7 +953,7 @@ export function ResumeForm() {
                             <Textarea {...field} onChange={(e) => {
                               field.onChange(e);
                               const skills = form.getValues("skills");
-                              skills[index].items = e.target.value;
+                              skills[index].items = e.target.value.split('\n').map(line => line.trim()).filter(line => line);
                               updateFormData("skills", skills);
                             }} />
                           </FormControl>
@@ -957,167 +968,24 @@ export function ResumeForm() {
                         <FormItem>
                           <FormLabel>Proficiency</FormLabel>
                           <FormControl>
-                            <Input {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const skills = form.getValues("skills");
-                              skills[index].proficiency = e.target.value;
-                              updateFormData("skills", skills);
-                            }} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Projects Section */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Projects</CardTitle>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addFormSection("projects", {
-                    name: "",
-                    description: "",
-                    technologies: [],
-                    link: "",
-                    startDate: "",
-                    endDate: "",
-                  })}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Project
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {form.watch("projects")?.map((_, index) => (
-                  <div key={index} className="space-y-4 relative p-4 border rounded-lg">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-2"
-                      onClick={() => {
-                        const projects = form.getValues("projects") || [];
-                        const newProjects = projects.filter((_, i) => i !== index);
-                        form.setValue("projects", newProjects);
-                        updateFormData("projects", newProjects);
-                      }}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-
-                    <FormField
-                      control={form.control}
-                      name={`projects.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Project Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].name = e.target.value;
-                              updateFormData("projects", projects);
-                            }} />
-                          </FormControl>
-                          <AiSuggestions
-                            section={`projects.${index}.name`}
-                            content={field.value}
-                            onUseSuggestion={(suggestion) => {
-                              field.onChange(suggestion);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].name = suggestion;
-                              updateFormData("projects", projects);
-                            }}
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`projects.${index}.description`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].description = e.target.value;
-                              updateFormData("projects", projects);
-                            }} />
-                          </FormControl>
-                          <AiSuggestions
-                            section={`projects.${index}.description`}
-                            content={field.value}
-                            onUseSuggestion={(suggestion) => {
-                              field.onChange(suggestion);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].description = suggestion;
-                              updateFormData("projects", projects);
-                            }}
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`projects.${index}.link`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Link</FormLabel>
-                          <FormControl>
-                            <Input {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].link = e.target.value;
-                              updateFormData("projects", projects);
-                            }} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`projects.${index}.startDate`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Start Date</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].startDate = e.target.value;
-                              updateFormData("projects", projects);
-                            }} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`projects.${index}.endDate`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>End Date</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} onChange={(e) => {
-                              field.onChange(e);
-                              const projects = form.getValues("projects") || [];
-                              projects[index].endDate = e.target.value;
-                              updateFormData("projects", projects);
-                            }} />
+                            <Select
+                              value={field.value}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                const skills = form.getValues("skills");
+                                skills[index].proficiency = value as "beginner" | "intermediate" | "advanced";
+                                updateFormData("skills", skills);
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select proficiency" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="beginner">Beginner</SelectItem>
+                                <SelectItem value="intermediate">Intermediate</SelectItem>
+                                <SelectItem value="advanced">Advanced</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

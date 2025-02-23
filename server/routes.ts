@@ -2,9 +2,15 @@ import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { Mistral } from "./lib/mistral";
-import { resumeSchema } from "@shared/schema";
+import { RAGService } from "./lib/rag";
+import { resumeSchema, embeddingSchema } from "@shared/schema";
 
-const mistral = new Mistral(process.env.MISTRAL_API_KEY || "");
+if (!process.env.MISTRAL_API_KEY) {
+  throw new Error("MISTRAL_API_KEY environment variable is required");
+}
+
+const mistral = new Mistral(process.env.MISTRAL_API_KEY);
+const rag = new RAGService(process.env.MISTRAL_API_KEY);
 
 export async function registerRoutes(app: Express) {
   // Resume CRUD operations
@@ -28,11 +34,45 @@ export async function registerRoutes(app: Express) {
       res.status(400).json({ errors: parsed.error });
       return;
     }
+
     const resume = await storage.createResume({
       userId: "test-user", // TODO: Get from auth
       data: parsed.data,
       template: "modern",
     });
+
+    // Generate embeddings for relevant sections
+    try {
+      const sections = [
+        { text: parsed.data.summary, category: "summary" },
+        ...parsed.data.experience.map(exp => ({
+          text: exp.description,
+          category: "experience",
+        })),
+        ...parsed.data.education.map(edu => ({
+          text: `${edu.degree} in ${edu.field} from ${edu.institution}`,
+          category: "education",
+        })),
+      ];
+
+      for (const section of sections) {
+        const vector = await rag.generateEmbedding(section.text);
+        await storage.createEmbedding({
+          resumeId: resume.id.toString(),
+          text: section.text,
+          vector,
+          metadata: {
+            section: section.category,
+            category: section.category,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Failed to generate embeddings:", error);
+      // Continue without embeddings
+    }
+
     res.json(resume);
   });
 
@@ -52,13 +92,37 @@ export async function registerRoutes(app: Express) {
     }
   });
 
-  // AI Suggestions
+  // AI Suggestions with RAG
   app.post("/api/suggest", async (req, res) => {
-    const { section, content } = req.body;
+    const { section, content, resumeId } = req.body;
     try {
-      const suggestion = await mistral.getSuggestion(section, content);
+      // Get similar content from existing embeddings
+      const similar = resumeId
+        ? await storage.getEmbeddingsByResumeId(resumeId)
+        : [];
+
+      let context = "";
+      if (similar.length > 0) {
+        const queryVector = await rag.generateEmbedding(content);
+        const similarContent = await storage.searchSimilarEmbeddings(
+          resumeId,
+          queryVector,
+          3
+        );
+        context = `Here are some similar examples from existing resumes:\n${
+          similarContent.map(s => s.text).join("\n")
+        }\n\n`;
+      }
+
+      // Get AI suggestion with context
+      const suggestion = await mistral.getSuggestion(
+        section,
+        `${context}Current content: ${content}`
+      );
+
       res.json({ suggestion });
     } catch (error) {
+      console.error("Failed to get AI suggestion:", error);
       res.status(500).json({ message: "Failed to get AI suggestion" });
     }
   });

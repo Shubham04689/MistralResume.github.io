@@ -97,6 +97,11 @@ export function ResumeForm() {
     }
   }
 
+  const addFormSection = (section: keyof ResumeData, template: any) => {
+    const currentItems = form.getValues(section) || [];
+    form.setValue(section, [...currentItems, template]);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -111,6 +116,7 @@ export function ResumeForm() {
           </Button>
         </div>
 
+        {/* Contact Section */}
         <Card>
           <CardHeader>
             <CardTitle>Contact Information</CardTitle>
@@ -188,9 +194,46 @@ export function ResumeForm() {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="contact.linkedIn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>LinkedIn</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <AiSuggestions
+                    section="contact.linkedIn"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="contact.website"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Website</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <AiSuggestions
+                    section="contact.website"
+                    content={field.value}
+                    onUseSuggestion={(suggestion) => field.onChange(suggestion)}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
+        {/* Summary Section */}
         <Card>
           <CardHeader>
             <CardTitle>Professional Summary</CardTitle>
@@ -224,20 +267,14 @@ export function ResumeForm() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                const experiences = form.getValues("experience");
-                form.setValue("experience", [
-                  ...experiences,
-                  {
-                    company: "",
-                    position: "",
-                    startDate: "",
-                    description: "",
-                    achievements: [],
-                    technologies: [],
-                  },
-                ]);
-              }}
+              onClick={() => addFormSection("experience", {
+                company: "",
+                position: "",
+                startDate: "",
+                description: "",
+                achievements: [],
+                technologies: [],
+              })}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Experience
@@ -245,12 +282,12 @@ export function ResumeForm() {
           </CardHeader>
           <CardContent className="space-y-6">
             {form.watch("experience").map((_, index) => (
-              <div key={index} className="space-y-4 relative">
+              <div key={index} className="space-y-4 relative p-4 border rounded-lg">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0"
+                  className="absolute right-2 top-2"
                   onClick={() => {
                     const experiences = form.getValues("experience");
                     form.setValue(
@@ -314,6 +351,362 @@ export function ResumeForm() {
                         content={field.value}
                         onUseSuggestion={(suggestion) => field.onChange(suggestion)}
                       />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Education Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Education</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addFormSection("education", {
+                institution: "",
+                degree: "",
+                field: "",
+                startDate: "",
+                endDate: "",
+                gpa: "",
+                achievements: [],
+              })}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Education
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {form.watch("education").map((_, index) => (
+              <div key={index} className="space-y-4 relative p-4 border rounded-lg">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    const education = form.getValues("education");
+                    form.setValue(
+                      "education",
+                      education.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.institution`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Institution</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.degree`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Degree</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.field`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Field of Study</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.startDate`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.endDate`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`education.${index}.gpa`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>GPA</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Skills Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Skills</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addFormSection("skills", {
+                category: "",
+                items: [],
+                proficiency: "intermediate",
+              })}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Skill Category
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {form.watch("skills").map((_, index) => (
+              <div key={index} className="space-y-4 relative p-4 border rounded-lg">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    const skills = form.getValues("skills");
+                    form.setValue(
+                      "skills",
+                      skills.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+
+                <FormField
+                  control={form.control}
+                  name={`skills.${index}.category`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Projects Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Projects</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addFormSection("projects", {
+                name: "",
+                description: "",
+                technologies: [],
+                link: "",
+                startDate: "",
+                endDate: "",
+              })}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Project
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {form.watch("projects")?.map((_, index) => (
+              <div key={index} className="space-y-4 relative p-4 border rounded-lg">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    const projects = form.getValues("projects") || [];
+                    form.setValue(
+                      "projects",
+                      projects.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+
+                <FormField
+                  control={form.control}
+                  name={`projects.${index}.name`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`projects.${index}.description`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`projects.${index}.link`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`projects.${index}.startDate`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`projects.${index}.endDate`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Languages Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Languages</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addFormSection("languages", {
+                name: "",
+                proficiency: "",
+              })}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Language
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {form.watch("languages")?.map((_, index) => (
+              <div key={index} className="space-y-4 relative p-4 border rounded-lg">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    const languages = form.getValues("languages") || [];
+                    form.setValue(
+                      "languages",
+                      languages.filter((_, i) => i !== index)
+                    );
+                  }}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+
+                <FormField
+                  control={form.control}
+                  name={`languages.${index}.name`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Language</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`languages.${index}.proficiency`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Proficiency</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
